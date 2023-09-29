@@ -1,11 +1,16 @@
 {
   "name": "exifyforkcontributors",
   "version": "1.0.0",
-  "description": "cli to add contributors to your exify fork",
+  "description": "cli tool to add contributors to your exify fork",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Swor71/exifyForkContributors"
   },
   "author": "Marcin Swornowski",
-  "license": "ISC"
+  "license": "MIT",
+  "dependencies": {
+    "@notionhq/client": "2.2.13",
+    "dotenv": "^16.3.1"
+  }
 }
