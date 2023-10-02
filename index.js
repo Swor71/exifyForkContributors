@@ -10,7 +10,7 @@ const ghAuthToken = process.env.GH_AUTH_TOKEN;
 const myGhHandle = process.env.MY_GH_HANDLE;
 const repoName = process.env.REPO_NAME;
 
-const notion = new Client({ auth: notionApiKey, logLevel: LogLevel.DEBUG });
+const notion = new Client({ auth: notionApiKey });
 const octokit = new Octokit({ auth: ghAuthToken });
 
 async function getUsersToInvite() {
@@ -21,8 +21,9 @@ async function getUsersToInvite() {
       database_id: notionPageId,
     });
 
+    // can this be moved to the query itself?
     return res.results.map(
-      (prop) => prop.properties[columnName].rich_text[0].plain_text
+      prop => prop.properties[columnName].rich_text[0].plain_text
     );
   } catch (error) {
     console.log('ERROR: ', error);
@@ -50,7 +51,6 @@ async function getUsersToInvite() {
 //   }
 // }
 
-// different approach of comparing locally having two arrays
 async function getRepoCollaborators() {
   try {
     const res = await octokit.request(
@@ -61,29 +61,53 @@ async function getRepoCollaborators() {
       }
     );
 
-    return res.data.map((user) => user.login);
+    return res.data.map(user => user.login);
   } catch (error) {
     console.log('ERROR: ', error);
   }
 }
 
-async function addUserAsCollaborator() {
+async function addUserAsCollaborator(username) {
+  try {
+    await octokit.request(
+      'PUT /repos/{owner}/{repo}/collaborators/{username}',
+      {
+        owner: myGhHandle,
+        repo: repoName,
+        username,
+      }
+    );
+
+    console.log(`✅ ${username} was added as a Collaborator!`);
+  } catch (error) {
+    if (error.status === 404) {
+      console.log(
+        `❌ User ${username} was not found and could not be added as a Collaborator`
+      );
+    } else {
+      console.log('ERROR: ', error.data.message);
+    }
+  }
+}
+
+// different approach of comparing two arrays locally
+async function findAndAddMissingRepoCollaborators() {
   const usersToInvite = await getUsersToInvite();
   const repoCollaborators = await getRepoCollaborators();
 
   const missingForkCollaborators = usersToInvite.filter(
-    (user) => !repoCollaborators.includes(user)
+    user => !repoCollaborators.includes(user)
   );
 
-  console.log(addUserAsCollaborator.name, {
+  console.log(findAndAddMissingRepoCollaborators.name, {
     usersToInvite,
     repoCollaborators,
     missingForkCollaborators,
   });
 
-  // for (username of missingForkCollaborators) {
-  //   await checkIfUserIsCollaborator(username);
-  // }
+  for (username of missingForkCollaborators) {
+    await addUserAsCollaborator(username);
+  }
 }
 
-addUserAsCollaborator();
+findAndAddMissingRepoCollaborators();
