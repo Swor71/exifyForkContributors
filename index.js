@@ -1,4 +1,4 @@
-const { Client, LogLevel } = require('@notionhq/client');
+const { Client } = require('@notionhq/client');
 const { Octokit } = require('@octokit/core');
 const { config } = require('dotenv');
 
@@ -8,7 +8,7 @@ const notionPageId = process.env.NOTION_PAGE_ID;
 const notionApiKey = process.env.NOTION_API_KEY;
 const ghAuthToken = process.env.GH_AUTH_TOKEN;
 const myGhHandle = process.env.MY_GH_HANDLE;
-const repoName = process.env.REPO_NAME;
+const repo = process.env.REPO_NAME;
 
 const notion = new Client({ auth: notionApiKey });
 const octokit = new Octokit({ auth: ghAuthToken });
@@ -30,34 +30,13 @@ async function getUsersToInvite() {
   }
 }
 
-// first approach is to use the api to check if the user is a collaborator and if not in the error catch add them
-// async function checkIfUserIsCollaborator(username) {
-//   try {
-//     const res = await octokit.request(
-//       'GET /repos/{owner}/{repo}/collaborators/{username}',
-//       {
-//         owner: myGhHandle,
-//         repo: repoName,
-//         username,
-//       }
-//     );
-
-//     console.log(checkIfUserIsCollaborator.name, res);
-//   } catch (error) {
-//     // if error -> user not a collaborator -> add here? kinda weird
-//     console.log('ERROR: ', error);
-
-//     return false;
-//   }
-// }
-
 async function getRepoCollaborators() {
   try {
     const res = await octokit.request(
       'GET /repos/{owner}/{repo}/collaborators',
       {
         owner: myGhHandle,
-        repo: repoName,
+        repo,
       }
     );
 
@@ -69,16 +48,18 @@ async function getRepoCollaborators() {
 
 async function addUserAsCollaborator(username) {
   try {
-    await octokit.request(
+    const res = await octokit.request(
       'PUT /repos/{owner}/{repo}/collaborators/{username}',
       {
         owner: myGhHandle,
-        repo: repoName,
+        repo,
         username,
       }
     );
 
-    console.log(`✅ ${username} was added as a Collaborator!`);
+    if (res.status === 201) {
+      console.log(`✅ ${username} was sent an invite to collaborate!`);
+    }
   } catch (error) {
     if (error.status === 404) {
       console.log(
@@ -90,7 +71,6 @@ async function addUserAsCollaborator(username) {
   }
 }
 
-// different approach of comparing two arrays locally
 async function findAndAddMissingRepoCollaborators() {
   const usersToInvite = await getUsersToInvite();
   const repoCollaborators = await getRepoCollaborators();
@@ -99,13 +79,7 @@ async function findAndAddMissingRepoCollaborators() {
     user => !repoCollaborators.includes(user)
   );
 
-  console.log(findAndAddMissingRepoCollaborators.name, {
-    usersToInvite,
-    repoCollaborators,
-    missingForkCollaborators,
-  });
-
-  for (username of missingForkCollaborators) {
+  for (const username of missingForkCollaborators) {
     await addUserAsCollaborator(username);
   }
 }
