@@ -7,7 +7,7 @@ config();
 const notionPageId = process.env.NOTION_PAGE_ID;
 const notionApiKey = process.env.NOTION_API_KEY;
 const ghAuthToken = process.env.GH_AUTH_TOKEN;
-const myGhHandle = process.env.MY_GH_HANDLE;
+const myGhHandle = process.env.GH_HANDLE;
 const repo = process.env.REPO_NAME;
 
 const notion = new Client({ auth: notionApiKey });
@@ -23,7 +23,7 @@ async function getUsersToInvite() {
 
     // can this be moved to the query itself?
     return res.results.map(
-      prop => prop.properties[columnName].rich_text[0].plain_text
+      prop => prop.properties[columnName].title[0].plain_text
     );
   } catch (error) {
     console.log('ERROR: ', error);
