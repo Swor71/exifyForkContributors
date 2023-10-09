@@ -7,7 +7,7 @@ config();
 const notionPageId = process.env.NOTION_PAGE_ID;
 const notionApiKey = process.env.NOTION_API_KEY;
 const ghAuthToken = process.env.GH_AUTH_TOKEN;
-const myGhHandle = process.env.GH_HANDLE;
+const ghHandle = process.env.GH_HANDLE;
 const repo = process.env.REPO_NAME;
 
 const notion = new Client({ auth: notionApiKey });
@@ -35,7 +35,7 @@ async function getRepoCollaborators() {
     const res = await octokit.request(
       'GET /repos/{owner}/{repo}/collaborators',
       {
-        owner: myGhHandle,
+        owner: ghHandle,
         repo,
       }
     );
@@ -51,7 +51,7 @@ async function addUserAsCollaborator(username) {
     const res = await octokit.request(
       'PUT /repos/{owner}/{repo}/collaborators/{username}',
       {
-        owner: myGhHandle,
+        owner: ghHandle,
         repo,
         username,
       }
