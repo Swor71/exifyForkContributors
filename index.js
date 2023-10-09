@@ -22,9 +22,9 @@ async function getUsersToInvite() {
     });
 
     // can this be moved to the query itself?
-    return res.results.map(
-      prop => prop.properties[columnName].title[0].plain_text
-    );
+    return res.results
+      .map(prop => prop.properties[columnName].title[0].plain_text)
+      .filter(user => user.toLowerCase() !== ghHandle.toLowerCase());
   } catch (error) {
     console.log('ERROR: ', error);
   }
@@ -66,7 +66,7 @@ async function addUserAsCollaborator(username) {
         `❌ User ${username} was not found and could not be added as a Collaborator`
       );
     } else {
-      console.log('ERROR: ', error.data.message);
+      console.log('ERROR: ', error.response.data.message);
     }
   }
 }
